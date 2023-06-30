@@ -1,0 +1,27 @@
+* How a computer starts up
+** 1. BIOS is copied from a ROM
+** 2. BIOS starts executing code
+- initializes hardware
+- runs some tests (POST -> Power-on self test)
+** 3. BIOS searches for an operating system to start
+** 4. BIOS loads and starts the operating system
+** 5. Operating system runs
+
+* How the BIOS finds an OS
+** Legacy booting
+- BIOS loads first sector of each bootable device into memory (at location 0x7C00)
+- BIOS checks for 0xAA55 signature
+- If found, it starts executing code
+
+** EFI
+- BIOS looks into special EFI partitions
+- Operating System must be compiled as an EFI program
+
+
+* Directive
+ Gives a clue to the assembler that will affect how the program gets
+ compiled. NOT translated to machine code!
+ Assembler specific - different assemblers might have diffrent directives.
+
+* Instruction
+Translate to a machine code instruction that the CPU will execute.
