@@ -1,11 +1,11 @@
 * How a computer starts up
-** 1. BIOS is copied from a ROM
-** 2. BIOS starts executing code
-- initializes hardware
-- runs some tests (POST -> Power-on self test)
-** 3. BIOS searches for an operating system to start
-** 4. BIOS loads and starts the operating system
-** 5. Operating system runs
+1. BIOS is copied from a ROM
+2. BIOS starts executing code
+    initializes hardware
+    runs some tests (POST -> Power-on self test)
+3. BIOS searches for an operating system to start
+4. BIOS loads and starts the operating system
+5. Operating system runs
 
 * How the BIOS finds an OS
 ** Legacy booting
@@ -22,6 +22,8 @@
 ** Instruction
 Translate to a machine code instruction that the CPU will execute.
 * Memory Segmentation
+Table of x86 Registers: https://commons.wikimedia.org/wiki/File:Table_of_x86_Registers_svg.svg
+
 0x1234:0x5678
 segment:offset
 
@@ -69,3 +71,49 @@ array: dw 100, 200, 300
     mov si, 2 * 2     ;array[2], words are 2 bytes wide
     mov ax, [bx + si] ; copy memory contents
 #+END_SRC
+
+* The Stack
+Memory accessed in a FIFO (firt in firt out) manner using *push* and *pop*.
+Used to save the return address when calling functions
+
+** Interrupts
+A signal which makes the processor stop what it's doing, in order to handle
+that signal.
+
+Can be triggered by:
+1. *An exception* (e.g. dividing by zero, segmentation fault, page fault)
+2. *HARDWARE* (e.g. keyboard key pressed or released, timer tick, disk controller
+   finished an operating)
+3. *SOFTWARE*, through the INT instruction
+
+*Examples of BIOS interrupts*
+INT 10h -- Video
+INT 11h -- Equipment check
+INT 12h -- Memory Size
+INT 13h -- Disk I/O
+INT 14h -- Serial communications
+INT 15h -- Cassette
+INT 16h -- Keyboard I/O
+
+*BIOS INT 10h*
+AH = 00h -- Set Video Mode
+AH = 01h -- Set Cursor Shape
+AH = 02h -- Set Cursor Position
+AH = 03h -- Get Cursor Position And Shape
+...
+AH = 0Eh -- Write Character in TTY mode
+...
+
+*BIOS INT 10h, AH = 0Eh*
+Print a character to the screen in TTY mode
+
+AH = 0E
+AL = ASCII character to write
+BH = page number (text modes)
+BL = foreground pixel color (graphics modes)
+
+returns nothing
+
+- cursor advances after write
+- character BEL (7), BS (8), LF (A), and CR (D) are treated
+  as control codes
