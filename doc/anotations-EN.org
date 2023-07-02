@@ -12,16 +12,60 @@
 - BIOS loads first sector of each bootable device into memory (at location 0x7C00)
 - BIOS checks for 0xAA55 signature
 - If found, it starts executing code
-
 ** EFI
 - BIOS looks into special EFI partitions
 - Operating System must be compiled as an EFI program
-
-
-* Directive
+** Directive
  Gives a clue to the assembler that will affect how the program gets
  compiled. NOT translated to machine code!
  Assembler specific - different assemblers might have diffrent directives.
-
-* Instruction
+** Instruction
 Translate to a machine code instruction that the CPU will execute.
+* Memory Segmentation
+0x1234:0x5678
+segment:offset
+
+real_address = segment * 16 + offset
+
+| segment:offset | real address |
+|----------------+--------------|
+| 0x0000:0x7C00  |       0x7C00 |
+| 0x0001:0x7BF0  |       0x7C00 |
+| 0x0010:0x7B00  |       0x7C00 |
+| 0x00C0:0x7000  |       0x7C00 |
+| 0x07C0:0x000   |       0x7C00 |
+
+These registers are used to specify currently active segments
+    CS - currently running code segment
+    DS - data segment
+    SS - statck segment
+    ES, FS, GS - extra (data) segments
+
+** Referencing a memory location
+segment:[base + index * scale + displacement]
+
+All fields are optional:
+    segment: CS, DS, ES, FS, GS, SS (DS if unspecified)
+    base: (16 bits) BP/BX
+          (32/64 bits) any general purpose register
+    index: (16 bits) SI/DI
+           (32/64 bits only) any general purpose register
+    scale: (32/64 bits only) 1, 2, 3, 4 or 8
+    displacement: a (signed) constant value
+
+#+BEGIN_SRC asm
+var: dw 100
+    mov ax, var     ; copy offset to ax
+    mov ax, [var]   ; copy memory contents
+#+END_SRC
+
+*MOV* destination, source
+    Copies data from source (register, memory reference, constant)
+    to destination (register or memory reference).
+
+#+BEGIN_SRC  asm
+array: dw 100, 200, 300
+    mov bx, array     ; copy offset to ax
+    mov si, 2 * 2     ;array[2], words are 2 bytes wide
+    mov ax, [bx + si] ; copy memory contents
+#+END_SRC
