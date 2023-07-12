@@ -1,23 +1,30 @@
-; ORG (directive)
-; Tells assembler where we expect our code to be laoded. The assembler uses
-; this information to calculate label addresses.
-; BITS (directive)
-; Tells assembler to emit 16/32/64-bit code.
-org 0x7C00
+;; ORG (directive)
+;; Tells assembler where we expect our code to be laoded. The assembler uses
+;; this information to calculate label addresses.
+;; BITS (directive)
+;; Tells assembler to emit 16/32/64-bit code.
+org 0x0
 bits 16
 
 %define ENDL 0x0D, 0x0A
 
 start:
-    jmp main
+    ;; print message
+    mov si, msg_hello
+    call puts
 
-;
-; Prints a string in the screen
-; Params:
-;      - ds::si points to string
-;
+.halt:
+    ;; HLT: Stops from executing (it can be resumed by an interrupt).
+    cli
+    hlt
+
+;;
+;; Prints a string in the screen
+;; Params:
+;;      - ds::si points to string
+;;
 puts:
-    ; save registers we will modify
+    ;; save registers we will modify
     push si
     push ax
     push bx
@@ -47,36 +54,4 @@ puts:
     pop si
     ret
 
-main:
-    ;; setup data segments
-    mov ax, 0                   ; can't set ds/es directly
-    mov ds, ax
-    mov es, ax
-
-    ;; setup stack
-    mov ss, ax
-    mov sp, 0x7C00              ; stack grows downwards from where we are loaded in memory
-
-    ; print message
-    mov si, msg_hello
-    call puts
-
-    ; HLT: Stops from executing (it can be resumed by an interrupt).
-    hlt
-
-.halt:
-    jmp .halt
-
-msg_hello: db 'Dragon Arch by Joao Leonardi', ENDL, 0
-
-; DB byte1, byte2, byte3... (directive)
-; Stands for "define byte(s)". Writes given byte(s) to the assembled binary file.
-; TIMES number instruction/data (directive)
-; Repeats given instruction or piece of data a number of times.
-; $: Special symbol which is equal to the memory offset of the current line.
-; $$: Special symbol which is equal to the memory offset of the beginning of the current section (in or case, program).
-; $-$$: Gives the size of our program so far (in bytes).
-; DW word1, word2, word3... (directive)
-; Stands for "define word(s)". Writes given word(s) (2 bytes value, encoded in little endian) to the assembler binary file.
-times 510-($-$$) db 0
-dw 0AA55h
+msg_hello: db 'Dragon Arch from kernel', ENDL, 0
