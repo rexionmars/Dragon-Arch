@@ -15,7 +15,7 @@ jmp short start
 nop
 
 bdb_oem                     db 'MSWIN4.1'           ; 8bytes
-bdb_bytes_per_sector:       dw  512
+bdb_bytes_per_sector:       dw 512
 bdb_sector_per_cluster:     db 1
 bdb_reserved_sectors:       dw 1
 bdb_fat_count:              db 2
@@ -33,7 +33,7 @@ ebr_drive_number:           db 0                    ; 0x00 floppy, 0x80 hdd, use
                             db 0                    ; reversed
 ebr_signature:              db 29h
 ebr_volume_id:              db 12h, 34h, 56h, 78h   ; serial number, value doens't matter
-ebr_volume_label:           db 'DragonArch'         ; 11 bytes padded
+ebr_volume_label:           db 'DragonArch'         ; 11 bytes padded with spaces
 ebr_system_id:              db 'FAT12   '           ; 8 bytes
 
 ;;
@@ -55,13 +55,10 @@ start:
     push es
     push word .after
     retf
+
 .after:
     ;; read somethings from floppy disk
     ;; BIOS should set DL to drive number
-    mov [ebr_drive_number], dl
-
-    ;;  read something from floppy disk
-    ;;  BIOS should set DL to drive number
     mov [ebr_drive_number], dl
 
     ;; show loading message
@@ -93,7 +90,7 @@ start:
     push ax
 
     ;; compute size of root directory = 32 * (number_of_entrys) / bytes_per_sector
-    mov ax, [bdb_sectors_per_fat]
+    mov ax, [bdb_dir_entries_count]
     shl ax, 5                           ; ax *= 32
     xor dx, dx                          ; dx = 0
     div word [bdb_bytes_per_sector]    ; number of sectors we need to read
@@ -169,7 +166,6 @@ start:
     ;; not nice hardcoded value
     add ax, 31                          ; first cluster = (kernel_cluster - 2) * sectors_per_cluster + start_sector
                                         ; start sector = reversed + fats + root directory size = 1 * 18 + 134 = 33
-
     mov cl, 1
     mov dl, [ebr_drive_number]
     call disk_read
@@ -184,7 +180,8 @@ start:
     div cx                              ; ax = index of entry in FAT, dx = cluster mod 2
 
     mov si, buffer
-    add si, [ds:si]                     ; read entry from FAT table at index ax
+    add si, ax                          ; read entry from FAT table at index ax
+    mov ax, [ds:si]
 
     or dx, dx
     jz .even
@@ -215,7 +212,7 @@ start:
     jmp wait_key_and_reboot             ; should never happen
 
     cli                                 ; disables interrupts, this way CPU can't get out of "halt" state
-    hlt                                 ; HLT: Stops from executing (it can be resumed by an interrupt).
+    hlt                                 ; hlt: Stops from executing (it can be resumed by an interrupt).
 
 ;;
 ;; Error handlers
@@ -237,7 +234,7 @@ wait_key_and_reboot:
 
 .halt:
     cli                                 ; disables interrupts, this way CPU can't get out of "halt" state
-    htl
+    hlt
 
 ;;
 ;; Prints a string in the screen
